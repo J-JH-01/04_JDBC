@@ -2,6 +2,7 @@ package edu.kh.jdbc.view;
 
 import java.util.ArrayList;
 import java.util.InputMismatchException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -156,10 +157,10 @@ public class UserView {
 		System.out.println("\n=== 3. 키워드가 이름에 들어간 User 전체 조회(SELECT) ===\n");
 		
 		System.out.print("검색하고자 하는 키워드 : ");
-		String input = sc.next();
+		String keyword = sc.nextLine();
 		
 		// 서비스 호출(SELCECT) 후 결과(List<User>) 반환 받기
-		List<User> userList = service.selectName(input);
+		List<User> userList = service.selectName(keyword);
 		
 		// 키워드 입력받기 
 		//
@@ -170,7 +171,9 @@ public class UserView {
 		}
 
 		// 있을 경우 향상된 for문 이용해서 userList에 있는 User 객체 출력
-		System.out.println(userList);
+		for(User user : userList) {
+			System.out.println(user);
+		}
 	}
 	
 	private void selectUser() throws Exception{
@@ -192,6 +195,9 @@ public class UserView {
 		
 	}
 	
+	/** USER_NO를 입력받아 일치하는 User 삭제 서비스	
+	 * @throws Exception
+	 */
 	private void deleteUser() throws Exception{
 		System.out.println("\n=== 5. User 삭제(DELETE) ===\n");
 		
@@ -199,23 +205,176 @@ public class UserView {
 		int input = sc.nextInt();
 		
 		int user = service.deleteUser(input);
-		
-		if(user < 1) return;
-		
+
 	}
 	
 	private void updateName() throws Exception{
-		// TODO Auto-generated method stub
+		System.out.println("\n=== 6. User 변경(UPDATE) ===\n");
 		
+		System.out.print("USER_ID 입력 : ");
+		String userId = sc.next();
+		
+		System.out.print("PASSWORD 입력 : ");
+		String userPw = sc.next();
+		
+		
+		int user = service.updateName(userId,userPw);
+
+		if (user == 0 ){ // 조회결과없음
+			System.out.println("아이디, 비밀번호가 일치하는 사용자가 없음");
+			return;
+		}
+		
+		// 조회 결과 있음
+		System.out.println("수정할 이름 입력 : ");
+		String userName = sc.next();
+		
+		// 이름 수정 서비스 (UPDATE) 호출 후
+		// 결과(수정된 행의 개수,int) 반환 받기
+		int result = service.updateName2(userName,user);
+		
+		if(result > 0 ) System.out.println("수정 성공!!!");
+		else			System.out.println("수정 실패...");
 	}
 	
+	/** 7. User 등록(아이디 중복 검사)
+	 * @throws Exception
+	 */
 	private void insertUser2() throws Exception{
-		// TODO Auto-generated method stub
+		
+		System.out.println("\n=== 7. User 등록(아이디 중복 검사) ===\n");
+		
+		String userId = null; // 입력된 아이디를 저장할 변수
+		
+		while(true) {
+			System.out.print("ID : ");
+			userId = sc.next();
+			
+			// 입력받은 userId가 중복인지 검사하는 서비스 호출 후
+			// 결과 반환받기(int, 중복 == 1, 아니면 == 0 ) 반환 받기
+			int count = service.idCheck(userId);
+			
+			if(count == 0) { //중복이 아닌 경우
+				System.out.println("사용 가능한 아이디 입니다");
+				break;
+			}
+			System.out.println("이미 사용중인 아이디입니다. 다시 입력해주세요");
+		}
+		
+		// 아이디가 중복이 아닌 경우 while 종료 후
+		// pw,name 입력받기
+		
+		System.out.print("PW : ");
+		String userPw = sc.next();
+		
+		System.out.print("Name : ");
+		String userName = sc.next();
+		
+		// 입력받은 값 3개를 한번에 묶어서 전달할 수 있도록
+		// User DTO 객체를 생성한 훈 필드에 값을 세팅
+		User user = new User();
+		
+		// setter 이용
+		user.setUserid(userId);
+		user.setUserPw(userPw);
+		user.setUserName(userName);
+		
+		//  1번에서 만든 service 메서드 재활용
+		int result = service.insertUser(user);
+		
+		// 반환된 결과에 따라 출력할 내용 선택
+		if(result > 0) {
+			System.out.println("\n" + userId + "사용자가 등록되었습니다\n");
+		} else {
+			System.out.println("\n***등록 실패***");
+		}
 		
 	}
 	
-	private void multiInsertUser()throws Exception {
-		// TODO Auto-generated method stub
+	
+	
+	
+	/** 8. 여러 User 등록하기
+	 * @throws Exception
+	 */
+	private void multiInsertUser() throws Exception {
+		
+		/*등록할 User 수 : 2
+		 * 
+		 * 1번째 userId : user100
+		 * -> 사용 가능한 ID 입니다
+		 * 1번째 userPw : pass100
+		 * 1번째 userName : 유저백
+		 * ---------------------------
+		 * 		
+		 * 2번째 userId : user200
+		 * -> 사용 가능한 ID 입니다
+		 * 2번째 userPw : pass200
+		 * 2번째 userName : 유저이백
+		 * 
+		 * - 전체 삽입 성공 / 삽입 실패
+		 * 
+		 */
+		
+		System.out.println("\n=== 8. 여러 User 등록하기? ===\n");
+		
+		System.out.println("등록할 User 수 : ");
+		int input = sc.nextInt();
+		sc.nextLine(); // 버퍼 개행 문자 제거
+		
+		// 입력받은 회원 정보를 저장할 List 객체 생성
+		List<User> userList = new ArrayList<User>();
+		
+		for(int i=0 ; i <input ; i++) {
+			String userId = null; // 입력된  아이디를 저장할 변수
+			
+			while(true) {
+				
+				System.out.print((i+1)+"번째 userId : ");
+				userId = sc.nextLine();
+				
+				// 입력받은 userId가 중복인지 검사하는 서비스 호출 후
+				// 결과 반환받기(int, 중복 == 1, 아니면 == 0 ) 반환 받기
+				int count = service.idCheck(userId);
+				
+				if(count == 0) { //중복이 아닌 경우
+					System.out.println("사용 가능한 아이디 입니다");
+					break;
+				}
+				System.out.println("이미 사용중인 아이디입니다. 다시 입력해주세요");
+			}
+			
+			// 아이디가 중복이 아닌 경우 while 종료 후
+			// pw,name 입력받기
+			
+			System.out.print((i+1)+"번째 PW : ");
+			String userPw = sc.nextLine();
+			
+			System.out.print((i+1)+"번째 Name : ");
+			String userName = sc.nextLine();
+			
+			// 입력받은 값 3개를 한번에 묶어서 전달할 수 있도록
+			// User DTO 객체를 생성한 훈 필드에 값을 세팅
+			User user = new User();
+			
+			// setter 이용
+			user.setUserid(userId);
+			user.setUserPw(userPw);
+			user.setUserName(userName);
+			
+			// userList에 user 추가
+			userList.add(user);
+	
+			
+		} //for문 종료
+		
+		// 입력 받은 모든 사용자를 insert 하는 서비스 호출
+		// -> 결과로 삽입된 행의 개수 반환
+		int result = service.multiInsertUser(userList);
+		
+		// 전체 삽입 성공시
+		if(result == userList.size()) System.out.println("전체 삽입 성공");
+		else System.out.println("삽입 실패");
 		
 	}
 	
