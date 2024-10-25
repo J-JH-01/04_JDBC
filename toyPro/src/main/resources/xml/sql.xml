@@ -2,25 +2,19 @@
 <!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
 <properties>
 
-	<!--  할 일 전체 조회 -->
-	<entry key="todoListFullView">
+	<!--  학생 목록 전체 조회 -->
+	<entry key="toyListFullView">
 		SELECT 
-			TODO_NO,
-			TODO_TITLE, 
-			TODO_COMPLETE, 
-			TO_CHAR(REG_DATE, 'YYYY-MM-DD HH24:MI:SS') REG_DATE
-		FROM TB_TODO
-		WHERE TODO_NO > 0
-		ORDER BY TODO_NO ASC
+		STD_NO ,
+		STD_NAME ,
+		STD_AGE ,
+		STD_GENDER ,
+		STD_SCORE 
+		FROM TB_STUDENTS 
+		WHERE STD_NO > 0 
+		ORDER BY STD_NO ASC
 	</entry>
 	
-	<!-- 완료된 할 일 개수 조회 -->
-	<entry key="getCompleteCount">
-		SELECT COUNT(*)
-		FROM TB_TODO
-		WHERE TODO_NO > 0 
-		AND TODO_COMPLETE =1
-	</entry>
 	
 	<!-- 할 일 추가 -->
 	<entry key="todoAdd">
@@ -29,42 +23,30 @@
 	</entry>
 	
 	<!--  -->
-	<entry key = "todoDetailView">
-		SELECT TODO_NO, 
-	    TODO_TITLE,
-	    TODO_DETAIL,
-	    TODO_COMPLETE,
-	    TO_CHAR(REG_DATE, 'YYYY-MM-DD HH24:MI:SS') REG_DATE
-	    FROM TB_TODO
-	    WHERE TODO_NO = ?
-	</entry>
-	
-	<!-- 완료 여부 변경 
-		TODO_COMPLETE 값이 0 일 때 1로 변경,
-		그 외의 값(1일 때) 은 0으로 변경
-		
-		TODO_COMPLETE에 저장되는 값이 0 또는 1만 가능(CHECK 제약조건)
-		DECODE(TODO_COMPLETE, 0, 1, 0) 그 외에건 전부 0란 뜻
-		== DECODE(TODO_COMPLETE, 0, 1, 1, 0) 0,1 체크제약 걸려있어서 위에처럼 써도 ㄱㅊ 
-		똑같이 동작함
-			-->
-	<entry key="todoComplete">
-		UPDATE TB_TODO
-		SET TODO_COMPLETE = DECODE(TODO_COMPLETE, 0, 1, 0)
-		WHERE TODO_NO = ?
+	<entry key = "toyDetailView">
+		SELECT 
+		STD_NO ,
+		STD_NAME ,
+		STD_AGE ,
+		STD_GENDER ,
+		STD_SCORE 
+	    FROM TB_STUDENTS 
+	    WHERE STD_NO = ?
 	</entry>
 	
 	
 	<!-- 할 일 수정 -->
-	<entry key="todoUpdate">
+	<entry key="toyUpdate">
 		UPDATE TB_TODO
-		SET TODO_TITLE = ?,
-			TODO_DETAIL = ?
+		SET STD_NAME = ?,
+			STD_AGE = ?,
+			STD_GENDER = ?,
+			STD_SCORE = ? ,
 		WHERE TODO_NO = ?
 	</entry>
 	
 	<!--  할 일 삭제 -->
-	<entry key="todoDelete">
+	<entry key="toyDelete">
 		DELETE FROM TB_TODO WHERE TODO_NO = ?
 	</entry>
 	
